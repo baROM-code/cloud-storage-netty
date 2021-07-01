@@ -1,0 +1,46 @@
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.geometry.Insets?>
+
+<VBox fx:controller="com.barom.cloudstoragenetty.controllers.ClientController"
+      xmlns:fx="http://javafx.com/fxml" alignment="center">
+
+
+    <HBox fx:id="authPanel" visible="false" managed="false">
+        <TextField fx:id="loginField" HBox.hgrow="ALWAYS" promptText="login"/>
+        <PasswordField fx:id="passwordField" HBox.hgrow="ALWAYS" promptText="password"/>
+        <Button text="login" minWidth="100"/>
+        <Button text="reg" minWidth="100"/>
+    </HBox>
+
+    <MenuBar>
+        <Menu text="Файл">
+            <MenuItem text="Выйти из программы" onAction="#btnExitAction"/>
+        </Menu>
+    </MenuBar>
+
+    <HBox VBox.vgrow="ALWAYS">
+        <VBox alignment="center">
+            <HBox>
+                <ComboBox fx:id="disksBox" />
+                <TextField fx:id="pathServer" editable="false" HBox.hgrow="ALWAYS"/>
+                <Button text="Вверх" onAction="#btnSrvPathUpAction"/>
+            </HBox>
+          <TableView fx:id="serverTable" VBox.vgrow="ALWAYS"/>
+        </VBox>
+        <fx:include fx:id="rightPanel" source="panel.fxml" HBox.hgrow="ALWAYS" />
+    </HBox>
+
+    <HBox spacing="5">
+        <Button maxWidth="Infinity" focusTraversable="false" text="F3 Показать" HBox.hgrow="ALWAYS"/>
+        <Button maxWidth="Infinity" focusTraversable="false" text="F5 Копировать" HBox.hgrow="ALWAYS" onAction="#copyBtnAction"/>
+        <Button maxWidth="Infinity" focusTraversable="false" text="F6 Переместить" HBox.hgrow="ALWAYS"/>
+        <Button maxWidth="Infinity" focusTraversable="false" text="F7 Создать каталог" HBox.hgrow="ALWAYS"/>
+        <Button maxWidth="Infinity" focusTraversable="false" text="F8 Удалить" HBox.hgrow="ALWAYS"/>
+        <Button maxWidth="Infinity" focusTraversable="false" text="Выход из программы" HBox.hgrow="ALWAYS" onAction="#btnExitAction"/>
+        <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
+        </padding>
+    </HBox>
+</VBox>
