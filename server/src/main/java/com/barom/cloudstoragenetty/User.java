@@ -1,4 +1,4 @@
-package com.barom.cloudstoragenetty.classes;
+package com.barom.cloudstoragenetty;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +12,7 @@ public class User {
         и методы для работы
      */
 
-    private static final String serverrootdir = "server";
+    private static final String serverrootdir = "storage";
 
     private String nickname;
     private Path rootpath;
