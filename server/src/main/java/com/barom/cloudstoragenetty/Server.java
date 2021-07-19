@@ -5,8 +5,13 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.stream.ChunkedWriteHandler;
+import io.netty.util.CharsetUtil;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -32,12 +37,16 @@ public class Server {
 
             bootstrap.group(auth, worker)
                     .channel(NioServerSocketChannel.class)
+                    .option(ChannelOption.SO_BACKLOG, 100)
+                    .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new ChannelInitializer<Channel>() {
                         @Override
                         protected void initChannel(Channel channel) throws Exception {
                             channel.pipeline().addLast(
-                                    new StringDecoder(), // in - 1
-                                    new StringEncoder(), // out - 1
+                                    new StringEncoder(CharsetUtil.UTF_8), // in - 1
+                                    // new LineBasedFrameDecoder(8192), // out - 1
+                                    new StringDecoder(CharsetUtil.UTF_8), // out - 2
+                                    new ChunkedWriteHandler(),
                                     new CommandHandler() // in - 2
                             );
                         }
