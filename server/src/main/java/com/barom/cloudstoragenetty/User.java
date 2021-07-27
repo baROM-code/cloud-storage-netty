@@ -1,54 +1,52 @@
 package com.barom.cloudstoragenetty;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class User {
-    /* Класс пользователь содержит:
-        Ник, Корневой каталог, Текущий каталог
-        и методы для работы
+    /*  Класс пользователь для хранения информации о подключенном пользователе
+        содержит:
+        Имя пользователя, Признак авторизации, Корневой каталог, Текущий каталог
      */
 
-    private static final String serverrootdir = "storage";
-
-    private String nickname;
+    private String username;
+    private boolean authorized;
     private Path rootpath;
     private Path currentpath;
 
-    public User(String nickname) {
-        this.nickname = nickname;
-        Path path = Paths.get(serverrootdir + File.separator + nickname).normalize();
-        try {
-            if (!Files.exists(path)) {
-                Files.createDirectory(path);
-            }
-            this.rootpath = path;
-            this.currentpath = path;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public User() {
+        this.authorized = false;
+        this.username = "";
     }
 
-    public Path getCurrentpath() {
-        return currentpath;
+    public String getUsername() {
+        return username;
     }
 
-    public String getNickname() {
-        return nickname;
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public boolean isAuthorized() {
+        return authorized;
+    }
+
+    public void setAuthorized(boolean authorized) {
+        this.authorized = authorized;
     }
 
     public Path getRootpath() {
         return rootpath;
     }
 
-    public void setCurrentpath(Path currentpath) {
-        this.currentpath = currentpath;
+    public void setRootpath(Path rootpath) {
+        this.rootpath = rootpath;
     }
 
-    public void setNickname(String nickname) {
-        this.nickname = nickname;
+    public Path getCurrentpath() {
+        return currentpath;
+    }
+
+    public void setCurrentpath(Path currentpath) {
+        this.currentpath = currentpath;
     }
 }

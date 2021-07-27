@@ -1,4 +1,4 @@
-package com.barom.cloudstoragenetty.classes;
+package com.barom.cloudstoragenetty;
 
 import java.io.File;
 import java.io.IOException;
@@ -7,6 +7,9 @@ import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 
 public class IOCmd {
@@ -16,9 +19,18 @@ public class IOCmd {
      */
 
     // Возвращает список файлов и директорий в pathname
-    public static String getFilesList(Path pathname) {
-        String[] servers = new File(String.valueOf(pathname)).list();
-        return String.join(" ", servers);
+    public static String getFilesList(Path pathname) throws IOException {
+        String[] files = new File(String.valueOf(pathname)).list();
+        ArrayList<String> res = new ArrayList<>();
+        for (String file : files) {
+            Path path = Paths.get(pathname + File.separator + file);
+            long size = Files.isDirectory(path) ? -1L : Files.size(path);
+            res.add(path.getFileName().toString() + "!" +
+                    size + "!" +
+                    LocalDateTime.ofInstant(Files.getLastModifiedTime(path).toInstant(), ZoneOffset.ofHours(3)).toString()
+            );
+        }
+        return String.join("#", res);
     }
 
     // Создание директории dirname в pathname
@@ -27,11 +39,11 @@ public class IOCmd {
         try {
             Files.createDirectory(path);
         } catch(FileAlreadyExistsException e){
-            return "ERROR: Directory Already Exists\n\r";
+            return "ERROR; Каталог уже существует!";
         } catch (IOException e) {
-            return "ERROR: IOException\n\r";
+            return "ERROR; IOException";
         }
-        return "Created directory: " + path + "\n\r";
+        return "OK";
     }
 
     // Создание файла
@@ -40,23 +52,23 @@ public class IOCmd {
         try {
             Files.createFile(path);
         } catch(FileAlreadyExistsException e){
-            return "ERROR: File already exists\n\r";
+            return "ERROR: File already exists";
         } catch (IOException e) {
-            return "ERROR: IOException\n\r";
+            return "ERROR: IOException";
         }
-        return "Created file: " + path + "\n\r";
+        return "Created file: " + path;
     }
 
     // Удаление файла или пустой директории
     public static String delFileOrDir(Path pathname, String fileordirname) {
         Path path = Paths.get(pathname + File.separator + fileordirname).normalize();
         if (!Files.exists(path)) {
-            return "ERROR: The file / directory does not exist!\n\r";
+            return "ERROR; Файл/каталог не существует!";
         } else try {
             Files.delete(path);
-            return fileordirname + " removed\n\r";
+            return "removed";
         } catch (IOException e) {
-            return "ERROR: Failed to delete the file or directory is not empty!\n\r";
+            return "ERROR; Не удалось удалить не пустой каталог!";
         }
     }
 
@@ -66,11 +78,11 @@ public class IOCmd {
         Path destinationPath = Paths.get(pathname + File.separator + dstPath).normalize();
         try {
             Files.copy(sourcePath, destinationPath);
-            return sourcePath + " copied to " + destinationPath + "\n\r";
+            return sourcePath + " copied to " + destinationPath;
         } catch(FileAlreadyExistsException e) {
-            return "ERROR: The destination file / directory already exist!\n\r";
+            return "ERROR: The destination file / directory already exist!";
         } catch (IOException e) {
-            return "ERROR: IOException\n\r";
+            return "ERROR: IOException";
         }
     }
 
@@ -78,13 +90,13 @@ public class IOCmd {
     public static String catFile(Path pathname, String filename) {
         Path path = Paths.get(pathname + File.separator + filename).normalize();
         if (!Files.exists(path)) {
-            return "ERROR: The file does not exist!\n\r";
+            return "ERROR: The file does not exist!";
         }
         List<String> lines = null;
         try {
             lines = Files.readAllLines(path, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            return "ERROR: IOException\n\r";
+            return "ERROR: IOException";
         }
         lines.add("");
         return String.join("\n\r", lines);

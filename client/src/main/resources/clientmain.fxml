@@ -8,14 +8,6 @@
 <VBox fx:controller="com.barom.cloudstoragenetty.controllers.ClientController"
       xmlns:fx="http://javafx.com/fxml" alignment="center">
 
-    <!--
-    <HBox fx:id="authPanel" visible="false" managed="false">
-        <TextField fx:id="loginField" HBox.hgrow="ALWAYS" promptText="login"/>
-        <PasswordField fx:id="passwordField" HBox.hgrow="ALWAYS" promptText="password"/>
-        <Button text="login" minWidth="100"/>
-        <Button text="reg" minWidth="100"/>
-    </HBox>
-    -->
     <MenuBar>
         <Menu text="Файл">
             <MenuItem text="Выйти из программы" onAction="#cmExitAction"/>
@@ -26,18 +18,17 @@
 
         <VBox alignment="center">
             <HBox>
-                <ComboBox fx:id="disksBoxServer" />
+                <ComboBox fx:id="disksBoxServer"/>
                 <TextField fx:id="pathServer" editable="false" HBox.hgrow="ALWAYS"/>
                 <Button text=".." onAction="#btnServerPathUpAction"/>
             </HBox>
-          <TableView fx:id="serverTable" VBox.vgrow="ALWAYS"/>
-          <FlowPane fx:id="fileView"/>
+            <TableView fx:id="serverTable" VBox.vgrow="ALWAYS"/>
+            <FlowPane fx:id="fileView"/>
         </VBox>
 
-        <VBox spacing="10" alignment="center" minWidth="120">
-            <Button maxWidth="Infinity" focusTraversable="false" text="Показать файл" HBox.hgrow="ALWAYS" onAction="#viewBtnAction"/>
+        <VBox spacing="10" alignment="center" minWidth="128">
+            <Button fx:id="btnView" maxWidth="Infinity" focusTraversable="false" text="Показать файл" HBox.hgrow="ALWAYS" onAction="#viewBtnAction"/>
             <Button maxWidth="Infinity" focusTraversable="false" text="Копировать" HBox.hgrow="ALWAYS" onAction="#copyBtnAction"/>
-            <Button maxWidth="Infinity" focusTraversable="false" text="Переместить" HBox.hgrow="ALWAYS"/>
             <Button maxWidth="Infinity" focusTraversable="false" text="Создать каталог" HBox.hgrow="ALWAYS" onAction="#mkdirBtnAction"/>
             <Button maxWidth="Infinity" focusTraversable="false" text="Удалить" HBox.hgrow="ALWAYS" onAction="#delBtnAction"/>
             <padding>
@@ -45,7 +36,7 @@
             </padding>
         </VBox>
 
-        <VBox alignment="center">
+        <VBox alignment="center" VBox.vgrow="ALWAYS">
             <HBox>
                 <ComboBox fx:id="disksBoxClient" onAction="#selectDiskAction"/>
                 <TextField fx:id="pathClient" editable="false" HBox.hgrow="ALWAYS"/>

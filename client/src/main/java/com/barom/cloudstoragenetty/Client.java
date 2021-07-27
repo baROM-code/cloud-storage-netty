@@ -10,14 +10,11 @@ import javafx.stage.Stage;
 public class Client extends Application {
 
     @Override
-    public void start(Stage primaryStage) throws Exception{
+    public void start(Stage primaryStage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("/clientmain.fxml"));
         primaryStage.setTitle("Cloud Storage (Netty)");
         primaryStage.setScene(new Scene(root, 1024, 600));
-        primaryStage.setOnCloseRequest(e -> {   //действия при закрытии окна приложения
-            Platform.exit();
-            System.exit(0);
-        });
+        primaryStage.setResizable(false);
         primaryStage.show();
     }
 

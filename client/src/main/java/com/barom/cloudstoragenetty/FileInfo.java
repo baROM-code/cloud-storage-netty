@@ -1,4 +1,4 @@
-package com.barom.cloudstoragenetty.classes;
+package com.barom.cloudstoragenetty;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -58,6 +58,14 @@ public class FileInfo {
         this.lastModified = lastModified;
     }
 
+    public boolean isDirectory() {
+        if (this.type == FileType.DIRECTORY) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public FileInfo(Path path) {
         try {
             this.filename = path.getFileName().toString();
@@ -71,4 +79,17 @@ public class FileInfo {
             throw new RuntimeException("Unable to create file info from path");
         }
     }
+
+    public FileInfo(String filename, long size, LocalDateTime lastModified) {
+        this.filename = filename;
+        this.size = size;
+        this.lastModified = lastModified;
+        if (size < 0) {
+            this.type = FileType.DIRECTORY;
+        } else {
+            this.type = FileType.FILE;
+        }
+    }
+
+
 }

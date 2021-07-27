@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<VBox alignment="center" xmlns:fx="http://javafx.com/fxml" fx:controller="com.barom.cloudstoragenetty.controllers.AuthController">
+    <HBox alignment="CENTER_RIGHT" depthTest="DISABLE" prefHeight="40" prefWidth="260.0" spacing="10.0">
+        <Label text="Логин" />
+        <TextField fx:id="loginField">
+         <HBox.margin>
+            <Insets right="30.0" />
+         </HBox.margin></TextField>
+    </HBox>
+    <HBox alignment="CENTER_RIGHT" prefHeight="40" prefWidth="200.0" spacing="10.0">
+        <Label text="Пароль" />
+        <PasswordField fx:id="passwordField">
+         <HBox.margin>
+            <Insets right="30.0" />
+         </HBox.margin></PasswordField>
+    </HBox>
+    <Label fx:id="lblInfo" text="" textAlignment="CENTER" textFill="#ff6400">
+      <font>
+         <Font size="14.0" />
+      </font></Label>
+    <HBox alignment="CENTER" prefHeight="40.0" prefWidth="200.0" spacing="30.0" VBox.vgrow="ALWAYS">
+        <Button defaultButton="true" onAction="#authBtnAction" text="Подключение" />
+        <Button onAction="#regBtnAction" text="Регистрация" />
+    </HBox>
+</VBox>
