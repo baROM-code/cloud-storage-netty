@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.baROM</groupId>
         <artifactId>cloud-storage-netty</artifactId>
-        <version>prerelease</version>
+        <version>Release-1.7</version>
     </parent>
     <packaging>jar</packaging>
 

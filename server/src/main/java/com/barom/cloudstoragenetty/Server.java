@@ -24,7 +24,6 @@ public class Server {
             bootstrap.group(auth, worker)
                     .channel(NioServerSocketChannel.class)
                     .option(ChannelOption.SO_BACKLOG, 128) //  количество очередей подключений
-                    // .handler(new LoggingHandler(LogLevel.ERROR))
                     .childHandler(new ChannelInitializer<Channel>() {
                         @Override
                         protected void initChannel(Channel channel) throws Exception {
@@ -32,8 +31,6 @@ public class Server {
                             ByteBuf delimiter = Unpooled.copiedBuffer("$>".getBytes());
                             channel.pipeline().addLast(
                                     new DelimiterBasedFrameDecoder(102400, delimiter), // декодер-разделитель
-                                    // new ObjectEncoder(),
-                                    // new LineBasedFrameDecoder(2048),
                                     // new ObjectDecoder(Integer.MAX_VALUE, ClassResolvers.weakCachingConcurrentResolver(null)),
                                     new StringDecoder(CharsetUtil.UTF_8),
                                     // new ObjectDecoder(ClassResolvers.cacheDisabled(null)),

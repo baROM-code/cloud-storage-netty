@@ -6,7 +6,7 @@
 
     <groupId>com.baROM</groupId>
     <artifactId>cloud-storage-netty</artifactId>
-    <version>prerelease</version>
+    <version>Release-1.7</version>
     <packaging>pom</packaging>
     <modules>
         <module>client</module>

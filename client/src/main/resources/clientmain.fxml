@@ -3,13 +3,15 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.geometry.Insets?>
 
-<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.text.Text?>
 <VBox fx:controller="com.barom.cloudstoragenetty.controllers.ClientController"
       xmlns:fx="http://javafx.com/fxml" alignment="center">
 
     <MenuBar>
         <Menu text="Файл">
+            <MenuItem text="Сменить пользователя" onAction="#cmRelogin"/>
+            <SeparatorMenuItem></SeparatorMenuItem>
             <MenuItem text="Выйти из программы" onAction="#cmExitAction"/>
         </Menu>
     </MenuBar>
@@ -26,11 +28,27 @@
             <FlowPane fx:id="fileView"/>
         </VBox>
 
-        <VBox spacing="10" alignment="center" minWidth="128">
-            <Button fx:id="btnView" maxWidth="Infinity" focusTraversable="false" text="Показать файл" HBox.hgrow="ALWAYS" onAction="#viewBtnAction"/>
-            <Button maxWidth="Infinity" focusTraversable="false" text="Копировать" HBox.hgrow="ALWAYS" onAction="#copyBtnAction"/>
-            <Button maxWidth="Infinity" focusTraversable="false" text="Создать каталог" HBox.hgrow="ALWAYS" onAction="#mkdirBtnAction"/>
-            <Button maxWidth="Infinity" focusTraversable="false" text="Удалить" HBox.hgrow="ALWAYS" onAction="#delBtnAction"/>
+        <VBox spacing="10" alignment="TOP_CENTER" prefWidth="146">
+            <VBox fx:id="authreg" spacing="4" alignment="CENTER">
+                <Label text="Логин"/>
+                <TextField fx:id="loginField"/>
+                <Label text="Пароль"/>
+                <PasswordField fx:id="passwordField"/>
+                <Button maxWidth="Infinity" defaultButton="true" onAction="#authBtnAction" text="Подключение"/>
+                <Button maxWidth="Infinity" onAction="#regBtnAction" text="Регистрация"/>
+            </VBox>
+
+            <VBox fx:id="userinfo" spacing="10" alignment="TOP_CENTER" prefHeight="140">
+                <TextArea fx:id="txtStorage" focusTraversable="false" editable="false"/>
+            </VBox>
+            <Button fx:id="btnView" maxWidth="Infinity" focusTraversable="false" text="Показать файл"
+                    HBox.hgrow="ALWAYS" onAction="#viewBtnAction"/>
+            <Button maxWidth="Infinity" focusTraversable="false" text="Копировать" HBox.hgrow="ALWAYS"
+                    onAction="#copyBtnAction"/>
+            <Button maxWidth="Infinity" focusTraversable="false" text="Создать каталог" HBox.hgrow="ALWAYS"
+                    onAction="#mkdirBtnAction"/>
+            <Button maxWidth="Infinity" focusTraversable="false" text="Удалить" HBox.hgrow="ALWAYS"
+                    onAction="#delBtnAction"/>
             <padding>
                 <Insets bottom="5.0" left="5.0" right="5.0" top="5.0"/>
             </padding>

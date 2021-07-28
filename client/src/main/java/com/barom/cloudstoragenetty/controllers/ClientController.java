@@ -7,19 +7,15 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
-import javafx.stage.Modality;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 import java.io.*;
 import java.net.InetSocketAddress;
@@ -53,9 +49,19 @@ public class ClientController implements Initializable {
     @FXML
     Button btnView;
 
+    @FXML
+    VBox userinfo;
+    @FXML
+    TextArea txtStorage;
+
+    @FXML
+    VBox authreg;
+    @FXML
+    TextField loginField;
+    @FXML
+    PasswordField passwordField;
+
     private Stage stage;
-    private Stage regStage;
-    private AuthController authController;
 
     // n.i.o
     private SocketChannel clinetSocket;
@@ -66,11 +72,14 @@ public class ClientController implements Initializable {
     private final String imgfiles = "png,jpg,jpeg,gif,bmp";
     private boolean isviewfilemode = false;
     private String viewfilename = "";
+    // Общий размер файлов пользователя
+    float userstoragetotalsize;
+    // Размер хранилища
+    long userstoragesize;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         //действия при закрытии окна приложения
-        /*
         Platform.runLater(() -> {
             stage = (Stage) pathClient.getScene().getWindow();
             stage.setOnCloseRequest(event -> {
@@ -79,7 +88,7 @@ public class ClientController implements Initializable {
                 System.exit(0);
             });
         });
-*/
+
         // панель просмотра файлов
         fileView.setVisible(false);
 
@@ -89,7 +98,7 @@ public class ClientController implements Initializable {
         fileTypeColumnL.setPrefWidth(20);
         TableColumn<FileInfo, String> filenameColumnL = new TableColumn<>("Имя");
         filenameColumnL.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFilename()));
-        filenameColumnL.setPrefWidth(215);
+        filenameColumnL.setPrefWidth(210);
         TableColumn<FileInfo, Long> fileSizeColumnL = new TableColumn<>("Размер");
         fileSizeColumnL.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue().getSize()));
         fileSizeColumnL.setCellFactory(column -> new TableCell<FileInfo, Long>() {
@@ -112,7 +121,7 @@ public class ClientController implements Initializable {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd.MM.YYYY HH:mm");
         TableColumn<FileInfo, String> fileDateColumnL = new TableColumn<>("Дата изменения");
         fileDateColumnL.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getLastModified().format(dtf)));
-        fileDateColumnL.setPrefWidth(110);
+        fileDateColumnL.setPrefWidth(105);
 
         serverTable.getColumns().addAll(fileTypeColumnL, filenameColumnL, fileSizeColumnL, fileDateColumnL);
         serverTable.getSortOrder().add(fileTypeColumnL);
@@ -136,7 +145,7 @@ public class ClientController implements Initializable {
         fileTypeColumnR.setPrefWidth(20);
         TableColumn<FileInfo, String> filenameColumnR = new TableColumn<>("Имя");
         filenameColumnR.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getFilename()));
-        filenameColumnR.setPrefWidth(215);
+        filenameColumnR.setPrefWidth(210);
         TableColumn<FileInfo, Long> fileSizeColumnR = new TableColumn<>("Размер");
         fileSizeColumnR.setCellValueFactory(param -> new SimpleObjectProperty<>(param.getValue().getSize()));
         fileSizeColumnR.setCellFactory(column -> new TableCell<FileInfo, Long>() {
@@ -158,7 +167,7 @@ public class ClientController implements Initializable {
         fileSizeColumnR.setPrefWidth(100);
         TableColumn<FileInfo, String> fileDateColumnR = new TableColumn<>("Дата изменения");
         fileDateColumnR.setCellValueFactory(param -> new SimpleStringProperty(param.getValue().getLastModified().format(dtf)));
-        fileDateColumnR.setPrefWidth(110);
+        fileDateColumnR.setPrefWidth(105);
 
         clientTable.getColumns().addAll(fileTypeColumnR, filenameColumnR, fileSizeColumnR, fileDateColumnR);
         clientTable.getSortOrder().add(fileTypeColumnR);
@@ -182,12 +191,6 @@ public class ClientController implements Initializable {
         updateClientPanel(Paths.get("."));
 
         clientNIO();
-        if (regStage == null) {
-            createAuthRegWindow();
-        }
-        Platform.runLater(() -> {
-            regStage.show();
-        });
     }
 
     public void cmExitAction(ActionEvent actionEvent) {
@@ -232,8 +235,11 @@ public class ClientController implements Initializable {
             if (confirmWindow(amsg, "") == ButtonType.OK) {
                 try {
                     long filesize = Files.size(Paths.get(pathClient.getText(), fname));
-                    //sendCommand("download;" + fname + ";" + filesize);
-                    sendFileToServer(fname);
+                    if (filesize > (userstoragesize - userstoragetotalsize)) {
+                        errorWindow("Ошибка копирования файла – недостаточно места на диске!");
+                        return;
+                    }
+                    sendCommand("download;" + fname + ";" + filesize);
                     /*
                     try (FileChannel fileChannel = FileChannel.open(Paths.get(pathClient.getText(), fname), StandardOpenOption.READ)) {
                         fileChannel.transferTo(0, filesize, clinetSocket);
@@ -274,17 +280,6 @@ public class ClientController implements Initializable {
             } else {
                 filedata += "#" + byteArrayToHex(buffer);
             }
-
-            /*
-            uploadFile.setStarPos(pos);
-            uploadFile.setEndPos(pos + endpos);
-            uploadFile.setBytes(buffer);
-            System.out.println(uploadFile);
-            objout.writeObject(uploadFile);
-            objout.flush();
-            ByteBuffer bb = ByteBuffer.wrap(bytearr.toByteArray());
-            clinetSocket.write(bb);
-             */
 
             System.out.println(filedata);
             sendCommand(filedata);
@@ -354,22 +349,21 @@ public class ClientController implements Initializable {
                     ByteBuffer clientBuffer = ByteBuffer.allocate(1024);
                     clinetSocket.read(clientBuffer);
                     String inmsg = new String(clientBuffer.array()).trim();
+                    clientBuffer.clear();
                     String[] instr = inmsg.split(";");
-                    System.out.println("Ответ " + inmsg);
+                    //System.out.println("Ответ " + inmsg);
 
                     // Аутентификация или регистрация
-                    if ("auth_ok".startsWith(instr[0])) {
+                    if ("auth_ok".startsWith(instr[0]) || "reg_ok".startsWith(instr[0])) {
                         authenticated = true;
+                        userstoragesize = Long.parseLong(instr[1]);
+                        authreg.setVisible(false);
+                        //txtStorage.appendText("Пользоватетель:\n" + loginField.getText());
                         sendCommand("curpathls");
-                        Platform.runLater(() -> {
-                            authController.passwordField.clear();
-                            regStage.close();
-                        });
                     } else if ("auth_error".startsWith(instr[0])) {
-                        Platform.runLater(() -> {
-                            authController.passwordField.clear();
-                            authController.lblInfo.setText("Ошибка авторизации!\nНеверный логин или пароль.");
-                        });
+                        errorWindow("Ошибка аутентификации!\nНеверный логин или пароль.");
+                    } else if ("reg_error".startsWith(instr[0])) {
+                        errorWindow("Ошибка регистрации!\nЛогин занят.");
                     }
                     // Работа
                     if (authenticated) {
@@ -397,6 +391,12 @@ public class ClientController implements Initializable {
                             }
                         } else if ("file_uploaded".startsWith(instr[0])) {
                             updateClientPanel(Paths.get(pathClient.getText()));
+                        } else if ("fileexist".startsWith(instr[0])) {
+                            if (confirmWindow("Файл: '" + instr[1] + "' уже существует на сервере!", "Отправить по новой?") == ButtonType.OK) {
+                                sendFileToServer(instr[1]);
+                            }
+                        } else if ("ready_dowmload".startsWith(instr[0])) {
+                            sendFileToServer(instr[1]);
                         } else if ("ERROR".startsWith(instr[0])) {
                             errorWindow(instr[1]);
                         }
@@ -418,14 +418,21 @@ public class ClientController implements Initializable {
     }
 
     private void updateServerPanel(String[] str) {
-        // str содержит текущий путь и если есть список файлов/каталогов + емкость + дата изменения
+        // str содержит текущий путь, общий размер файлов и если есть список файлов/каталогов + емкость + дата изменения
         pathServer.setText(str[1]);
-        if (str.length < 3) {
+        userstoragetotalsize = Long.parseLong(str[2]);
+
+        txtStorage.clear();
+        txtStorage.appendText("Пользоватетель:\n" + loginField.getText());
+        txtStorage.appendText(String.format("\n\nХранилище:\nСвободно %.2f Мб \nиз %d Мб", (userstoragesize - userstoragetotalsize) / 1048576, userstoragesize / 1048576));
+        // sizebar.setProgress(userstoragetotalsize / userstoragesize);
+
+        if (str.length < 4) {
             serverTable.getItems().clear();
             serverTable.getItems().add(new FileInfo("..", -1L, LocalDateTime.now()));
             return;
         }
-        String[] filesinfo = str[2].split("#");
+        String[] filesinfo = str[3].split("#");
         serverTable.getItems().clear();
         for (String files : filesinfo) {
             String[] file = files.split("!");
@@ -555,19 +562,24 @@ public class ClientController implements Initializable {
         }
     }
 
-    private void createAuthRegWindow() {
-        try {
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/authorization.fxml"));
-            Parent root = fxmlLoader.load();
-            regStage = new Stage();
-            regStage.setTitle("Подключение/регистрация на сервере");
-            regStage.setScene(new Scene(root, 260, 180));
-            regStage.initModality(Modality.APPLICATION_MODAL);
-            regStage.initStyle(StageStyle.UTILITY);
-            authController = fxmlLoader.getController();
-            authController.setController(this);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    @FXML
+    private void authBtnAction(ActionEvent actionEvent) {
+        String login = loginField.getText().trim();
+        String password = passwordField.getText().trim();
+        passwordField.clear();
+        sendCommand("auth;" + login + ";" + password);
+    }
+
+    public void regBtnAction(ActionEvent actionEvent) {
+        String login = loginField.getText().trim();
+        String password = passwordField.getText().trim();
+        passwordField.clear();
+        sendCommand("reg;" + login + ";" + password);
+    }
+
+    public void cmRelogin(ActionEvent actionEvent) {
+        pathServer.setText("");
+        serverTable.getItems().clear();
+        authreg.setVisible(true);
     }
 }

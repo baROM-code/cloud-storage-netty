@@ -5,17 +5,20 @@ import java.nio.file.Path;
 public class User {
     /*  Класс пользователь для хранения информации о подключенном пользователе
         содержит:
-        Имя пользователя, Признак авторизации, Корневой каталог, Текущий каталог
+        Имя пользователя, Признак аутентификации,
+        Корневой каталог, Текущий каталог, Количество байт занятых файлами
      */
 
     private String username;
-    private boolean authorized;
+    private boolean authenticated;
     private Path rootpath;
     private Path currentpath;
+    private long totalsize;
 
     public User() {
-        this.authorized = false;
+        this.authenticated = false;
         this.username = "";
+        this.totalsize = 0L;
     }
 
     public String getUsername() {
@@ -26,12 +29,12 @@ public class User {
         this.username = username;
     }
 
-    public boolean isAuthorized() {
-        return authorized;
+    public boolean isAuthenticated() {
+        return authenticated;
     }
 
-    public void setAuthorized(boolean authorized) {
-        this.authorized = authorized;
+    public void setAuthenticated(boolean authenticated) {
+        this.authenticated = authenticated;
     }
 
     public Path getRootpath() {
@@ -48,5 +51,13 @@ public class User {
 
     public void setCurrentpath(Path currentpath) {
         this.currentpath = currentpath;
+    }
+
+    public long getTotalsize() {
+        return totalsize;
+    }
+
+    public void setTotalsize(long totalsize) {
+        this.totalsize = totalsize;
     }
 }

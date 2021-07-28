@@ -2,14 +2,14 @@ package com.barom.cloudstoragenetty.handlers;
 
 import java.sql.*;
 
-public class DataBaseAuthService {
+public class DataBaseService {
     /*
-        Сервис авторизации пользователя с использованием БД
+        Сервис получения / внесения данных пользователей с использованием БД
      */
 
     private static Connection connection;
     private static Statement stmt;
-    private static PreparedStatement psInsert;
+    private static PreparedStatement prst;
 
     // подключение к БД
     private static void connect() throws ClassNotFoundException, SQLException {
@@ -37,11 +37,10 @@ public class DataBaseAuthService {
         try {
             connect();
             ResultSet rs = stmt.executeQuery("SELECT password FROM users WHERE login='" + login + "'");
-            if (rs == null) {
+            if (!rs.next()) {
                 return false;
             }
             String passwordDB = rs.getString("password");
-            System.out.println(passwordDB);
             if (passwordDB.equals(password)) {
                 return true;
             }
@@ -62,9 +61,6 @@ public class DataBaseAuthService {
         try {
             connect();
             ResultSet rs = stmt.executeQuery("SELECT rootdir FROM users WHERE login='" + login + "'");
-            if (rs == null) {
-                return "";
-            }
             return rs.getString("rootdir");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -74,22 +70,39 @@ public class DataBaseAuthService {
         }
     }
 
-    /* Добавление нового сользователя в БД
+    // Возвращает суммарный размер всех файлов пользователя
+    public long getUserTotalSize(String login) throws SQLException {
+        try {
+            connect();
+            ResultSet rs = stmt.executeQuery("SELECT totalsize FROM users WHERE login='" + login + "'");
+            return rs.getLong("totalsize");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            return 0L;
+        } finally {
+            disconnect();
+        }
+    }
+
+    /* Добавление нового пользователя в БД
         вернет true - если логин свобен и пользователь добавлен в БД
      */
     public boolean addNewUser(String login, String password) {
         try {
             connect();
+            /*
             ResultSet rs = stmt.executeQuery("SELECT login FROM users WHERE login='" + login + "'");
-            if (rs == null) {
+            if (!(rs == null)) {
                 return false;
             }
-            psInsert = connection.prepareStatement("INSERT INTO users (login, password, nickname, rootdir) VALUES ( ? , ? , ?);");
-            psInsert.setString(1, login);
-            psInsert.setString(2, password);
-            psInsert.setString(3, login);
-            psInsert.setString(4, login);
-            psInsert.executeUpdate();
+
+             */
+            prst = connection.prepareStatement("INSERT INTO users (login, password, nickname, rootdir) VALUES ( ? , ? , ? , ?);");
+            prst.setString(1, login);
+            prst.setString(2, password);
+            prst.setString(3, login);
+            prst.setString(4, login);
+            prst.executeUpdate();
             return true;
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
