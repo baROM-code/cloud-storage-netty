@@ -34,7 +34,7 @@ public class WorkHandler extends ChannelInboundHandlerAdapter {
     }
 
     private static final String serverrootdir = "storage";
-    private static final long userstoragesize = 10 * 1024 * 1024;
+    private static final long userstoragesize = 100 * 1024 * 1024;
     private static Map<ChannelId, User> clients = new HashMap<>();
     private DataBaseService dataBaseService = new DataBaseService();
 
@@ -57,7 +57,12 @@ public class WorkHandler extends ChannelInboundHandlerAdapter {
                 .replace("\n", "")
                 .replace("\r", "")
                 .split(";");
-        logger.info("in message command: " + msg + "  from client:" + clients.get(ctx.channel().id()).getUsername());
+        String log = String.valueOf(msg);
+        int p = log.indexOf("#");
+        if (p > 0) {
+            log = log.substring(0, p);
+        }
+        logger.info("in message command: " + log + "  from client:" + clients.get(ctx.channel().id()).getUsername());
 
         if ("auth".startsWith(command[0])) {
             if (dataBaseService.isUserLoginPasswordRight(command[1], command[2])) {
@@ -96,17 +101,7 @@ public class WorkHandler extends ChannelInboundHandlerAdapter {
 
             currentpath = clients.get(ctx.channel().id()).getCurrentpath(); // Получим текущий путь для клиента
 
-            // StringBuilder strbuilder = new StringBuilder();
-            /*
-            while (buf.isReadable()) {
-                strbuilder.append((char)buf.readByte());
-            } */
-            // String str = msg.toString();
-            // ctx.fireChannelRead(builder.toString()); // отправка дальше по очереди
-
-            // String s= ((ByteBuf) msg).toString(CharsetUtil.UTF_8);
             String outmsg = "";
-
 
             if ("curpathls".startsWith(command[0])) {
                 sendCurpathLs(ctx, currentpath);
@@ -146,6 +141,7 @@ public class WorkHandler extends ChannelInboundHandlerAdapter {
                 outmsg = IOCmd.delFileOrDir(currentpath, command[1]);
                 if ("removed".startsWith(outmsg)) {
                     clients.get(ctx.channel().id()).setTotalsize(clients.get(ctx.channel().id()).getTotalsize() - sz);
+                    dataBaseService.saveTotalSize(clients.get(ctx.channel().id()).getUsername(), clients.get(ctx.channel().id()).getTotalsize());
                     sendCurpathLs(ctx, currentpath);
                 } else {
                     ctx.writeAndFlush(outmsg + "\n");
@@ -157,7 +153,6 @@ public class WorkHandler extends ChannelInboundHandlerAdapter {
                     ctx.writeAndFlush("ready_dowmload;" + command[1] + "\n");
                 }
             }
-
                 /*
                 try (FileChannel fileChannel = FileChannel.open(Paths.get(String.valueOf(currentpath), command[1]), StandardOpenOption.CREATE, StandardOpenOption.WRITE)) {
                     fileChannel.transferFrom((ReadableByteChannel) ctx, 0, Long.parseLong(command[2]));
@@ -237,6 +232,7 @@ public class WorkHandler extends ChannelInboundHandlerAdapter {
                 logger.info("File: " + filename + " downloaded to server");
                 // прибавим размер файла к тотал
                 clients.get(ctx.channel().id()).setTotalsize(clients.get(ctx.channel().id()).getTotalsize() + filesize);
+                dataBaseService.saveTotalSize(clients.get(ctx.channel().id()).getUsername(), clients.get(ctx.channel().id()).getTotalsize());
                 sendCurpathLs(ctx, Paths.get(path));
             }
         } catch (IOException e) {

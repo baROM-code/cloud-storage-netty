@@ -111,4 +111,18 @@ public class DataBaseService {
             disconnect();
         }
     }
+
+    // Запись объма занятого файлами пользователя в БД
+    public void saveTotalSize(String login, long tsize) {
+        try {
+            connect();
+            stmt.executeUpdate("UPDATE users SET totalsize = '" + tsize + "' WHERE login = '" + login + "';");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        } finally {
+            disconnect();
+        }
+    }
 }

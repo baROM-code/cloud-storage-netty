@@ -12,9 +12,13 @@ import io.netty.handler.codec.string.StringDecoder;
 import io.netty.handler.codec.string.StringEncoder;
 import io.netty.util.CharsetUtil;
 
+import java.nio.file.Paths;
+
 public class Server {
 
     public Server() {
+
+        IOCmd.mkDir(Paths.get("."), "storage");
 
         EventLoopGroup auth = new NioEventLoopGroup(1);
         EventLoopGroup worker = new NioEventLoopGroup();
@@ -31,12 +35,9 @@ public class Server {
                             ByteBuf delimiter = Unpooled.copiedBuffer("$>".getBytes());
                             channel.pipeline().addLast(
                                     new DelimiterBasedFrameDecoder(102400, delimiter), // декодер-разделитель
-                                    // new ObjectDecoder(Integer.MAX_VALUE, ClassResolvers.weakCachingConcurrentResolver(null)),
                                     new StringDecoder(CharsetUtil.UTF_8),
-                                    // new ObjectDecoder(ClassResolvers.cacheDisabled(null)),
                                     new StringEncoder(CharsetUtil.UTF_8),
                                     new WorkHandler()
-                                    //new FileHandler()
                             );
                         }
                     });

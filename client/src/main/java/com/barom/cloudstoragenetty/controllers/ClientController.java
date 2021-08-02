@@ -4,7 +4,10 @@ import com.barom.cloudstoragenetty.FileInfo;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -60,6 +63,11 @@ public class ClientController implements Initializable {
     TextField loginField;
     @FXML
     PasswordField passwordField;
+
+    @FXML
+    Label copyLbl;
+    @FXML
+    ProgressBar copyBar;
 
     private Stage stage;
 
@@ -252,48 +260,85 @@ public class ClientController implements Initializable {
     }
 
     public void sendFileToServer(String fname) throws IOException {
-        // FilePackage uploadFile = new FilePackage();
+
         long filesize = Files.size(Paths.get(pathClient.getText(), fname));
         File f = new File(pathClient.getText() + File.separator + fname);
         if (!f.exists()) {
-            throw new FileNotFoundException();
+            return;
         }
-        /*
-        uploadFile.setFilename(fname);
-        uploadFile.setFilesize(filesize);
-        ByteArrayOutputStream bytearr = new ByteArrayOutputStream();
-        ObjectOutputStream objout = new ObjectOutputStream(bytearr);
-        */
 
-        RandomAccessFile raf = new RandomAccessFile(f, "r");
-        int pos = 0;
-        int endpos;
-        int buflength = 8 * 1024;
-        byte[] buffer = new byte[buflength];
+        Task copyTask = new Task() {
+            @Override
+            protected Object call() throws Exception {
+                try (RandomAccessFile raf = new RandomAccessFile(f, "r")) {
+                    int pos = 0;
+                    int endpos;
+                    int buflength = 8 * 1024;
+                    byte[] buffer = new byte[buflength];
+                    ByteBuffer bb = ByteBuffer.allocate(buflength);
+                    FileChannel inChannel = raf.getChannel();
 
-        while ((endpos = raf.read(buffer)) != -1) {
-            String filedata = "file;" + fname + "#" + filesize + "#" + pos;
-            int toend = (int) (raf.length() - pos);
-            if (toend < buflength) {
-                byte[] minbuffer = Arrays.copyOf(buffer, toend);
-                filedata += "#" + byteArrayToHex(minbuffer);
-            } else {
-                filedata += "#" + byteArrayToHex(buffer);
+                    // copyLbl.setText("Upload:\n" + fname); // TODO: так выдает ошибку Not on FX application thread
+
+                    copyBar.setVisible(true);
+
+                    while ((endpos = inChannel.read(bb)) != -1) {   // raf.read(buffer)
+                        String filedata = "file;" + fname + "#" + filesize + "#" + pos;
+                        int toend = (int) (raf.length() - pos);
+                        bb.flip();
+                        if (toend < buflength) {
+                            // byte[] minbuffer = Arrays.copyOf(bb, toend);
+                            // filedata += "#" + byteArrayToHex(minbuffer, toend);
+                            filedata += "#" + byteArrayToHex(bb, toend);
+                        } else {
+                            // filedata += "#" + byteArrayToHex(buffer);
+                            filedata += "#" + byteArrayToHex(bb, buflength);
+                        }
+                        pos += endpos;
+                        bb.clear();
+                        sendCommand(filedata);
+                        double progress = (double) pos / (double) filesize;
+                        Platform.runLater(() -> {
+                            copyLbl.setText("Upload:\n" + fname); // TODO: так ошибки нет
+                            copyBar.setProgress(progress);
+                        });
+                    }
+                    raf.close();
+                    inChannel.close();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                return null;
             }
-
-            System.out.println(filedata);
-            sendCommand(filedata);
-            pos += endpos;
-        }
-        raf.close();
+        };
+        copyTask.addEventHandler(WorkerStateEvent.WORKER_STATE_SUCCEEDED,
+                new EventHandler() {
+                    @Override
+                    public void handle(Event event) {
+                        copyLbl.setText("");
+                        copyBar.setVisible(false);
+                    }
+                });
+        new Thread(copyTask).start();
     }
 
-    // Конвертирует байтовый массив в hex представление
-    public static String byteArrayToHex(byte[] a) {
-        StringBuilder sb = new StringBuilder(a.length * 2);
+    // Конвертирует байтовый массив в hex представление byte[] a
+    public static String byteArrayToHex(ByteBuffer a, int length) {
+        // StringBuilder sb = new StringBuilder(a.length * 2);
+        StringBuilder sb = new StringBuilder(length * 2);
+
+        for (int i = 0; i < length; i++) {
+            sb.append(String.format("%02x", a.get(i)));
+        }
+
+        /*
         for (byte b : a) {
             sb.append(String.format("%02x", b));
         }
+
+         */
         return sb.toString();
     }
 
@@ -425,7 +470,6 @@ public class ClientController implements Initializable {
         txtStorage.clear();
         txtStorage.appendText("Пользоватетель:\n" + loginField.getText());
         txtStorage.appendText(String.format("\n\nХранилище:\nСвободно %.2f Мб \nиз %d Мб", (userstoragesize - userstoragetotalsize) / 1048576, userstoragesize / 1048576));
-        // sizebar.setProgress(userstoragetotalsize / userstoragesize);
 
         if (str.length < 4) {
             serverTable.getItems().clear();
